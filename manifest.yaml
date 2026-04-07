@@ -1,0 +1,17 @@
+display_information:
+  name: Standup Bot
+  description: Posts daily standup messages and collects updates in threads
+  background_color: "#2c2d30"
+
+features:
+  bot_user:
+    display_name: Standup Bot
+    always_online: true
+
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - channels:join
+      - groups:write
+      - groups:history
