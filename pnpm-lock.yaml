@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@37signals/fizzy':
+        specifier: ^0.2.1
+        version: 0.2.1(typescript@6.0.3)
       '@slack/web-api':
         specifier: ^7.9.1
         version: 7.15.0
@@ -19,6 +22,12 @@ importers:
         version: 3.0.3
 
 packages:
+
+  '@37signals/fizzy@0.2.1':
+    resolution: {integrity: sha512-Hb78sxP8NO1wTeONZoUFsBuKIbgEYXtumJxPvmQUTzYElGNpOEVs7EzsHmZoe7AnfWTu+AsmYvFbgi2y+qEktw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      typescript: '>=5.0.0'
 
   '@slack/logger@4.0.1':
     resolution: {integrity: sha512-6cmdPrV/RYfd2U0mDGiMK8S7OJqpCTm7enMLRR3edccsPX8j7zXTLnaEF4fhxxJJTAIOil6+qZrnUPTuaLvwrQ==}
@@ -149,6 +158,12 @@ packages:
     resolution: {integrity: sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A==}
     engines: {node: '>=6.0.0'}
 
+  openapi-fetch@0.17.0:
+    resolution: {integrity: sha512-PsbZR1wAPcG91eEthKhN+Zn92FMHxv+/faECIwjXdxfTODGSGegYv0sc1Olz+HYPvKOuoXfp+0pA2XVt2cI0Ig==}
+
+  openapi-typescript-helpers@0.1.0:
+    resolution: {integrity: sha512-OKTGPthhivLw/fHz6c3OPtg72vi86qaMlqbJuVJ23qOvQ+53uw1n7HdmkJFibloF7QEjDrDkzJiOJuockM/ljw==}
+
   p-finally@1.0.0:
     resolution: {integrity: sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow==}
     engines: {node: '>=4'}
@@ -173,6 +188,11 @@ packages:
     resolution: {integrity: sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==}
     engines: {node: '>= 4'}
 
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
@@ -181,6 +201,11 @@ packages:
     hasBin: true
 
 snapshots:
+
+  '@37signals/fizzy@0.2.1(typescript@6.0.3)':
+    dependencies:
+      openapi-fetch: 0.17.0
+      typescript: 6.0.3
 
   '@slack/logger@4.0.1':
     dependencies:
@@ -317,6 +342,12 @@ snapshots:
     dependencies:
       uuid: 8.3.2
 
+  openapi-fetch@0.17.0:
+    dependencies:
+      openapi-typescript-helpers: 0.1.0
+
+  openapi-typescript-helpers@0.1.0: {}
+
   p-finally@1.0.0: {}
 
   p-queue@6.6.2:
@@ -336,6 +367,8 @@ snapshots:
   proxy-from-env@2.1.0: {}
 
   retry@0.13.1: {}
+
+  typescript@6.0.3: {}
 
   undici-types@7.18.2: {}
 
