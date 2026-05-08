@@ -16,7 +16,15 @@ function createSlackClient(token) {
  * Returns:
  *   Object with parentTs and replyTs timestamps
  */
-async function postStandup(client, channelId, standupMessage, threadMessage) {
+async function postStandup(
+  client,
+  channelId,
+  standupMessage,
+  threadMessage,
+  options = {}
+) {
+  const { parentBlocks = null, skipThreadReply = false } = options;
+
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -30,10 +38,18 @@ async function postStandup(client, channelId, standupMessage, threadMessage) {
     .replace(/\\n/g, "\n");
   const formattedThread = threadMessage.replace(/\\n/g, "\n");
 
-  const parentMessage = await client.chat.postMessage({
+  const parentParams = {
     channel: channelId,
     text: formattedStandup,
-  });
+  };
+  if (parentBlocks && parentBlocks.length > 0) {
+    parentParams.blocks = parentBlocks;
+  }
+  const parentMessage = await client.chat.postMessage(parentParams);
+
+  if (skipThreadReply) {
+    return { parentTs: parentMessage.ts, replyTs: null };
+  }
 
   const threadReply = await client.chat.postMessage({
     channel: channelId,
