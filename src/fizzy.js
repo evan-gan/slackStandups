@@ -16,6 +16,19 @@ const PROMPT =
   "Bullet points will suffice.\n\n" +
   "If you didn't do anything yesterday and/or won't get anything done today that's fine! Please just say so instead of not replying.";
 
+// First name (lowercase) -> Slack user ID. Used to turn Fizzy assignees into
+// real Slack pings (<@U…>). Names that aren't in this map fall back to a
+// plain @handle derived from the first name.
+const FIRST_NAME_TO_SLACK_ID = {
+  "manitej": "U04QD71QWS0",
+  "sofia": "U056J6JURFF",
+  "evan": "U05D1G4H754",
+  "violet": "U080YU735H8",
+  "darlene": "U07SX29CECA",
+  "daniel": "U07E6TW9DL0",
+  "annabel": "U078J6H1XL3"
+};
+
 const COLOR_EMOJI = {
   blue: "🟦",
   yellow: "🟨",
@@ -229,20 +242,26 @@ function escapeMrkdwn(text) {
     .replace(/>/g, "&gt;");
 }
 
-function handleFromName(name) {
+function firstNameKey(name) {
   if (!name) return null;
   const first = name.trim().split(/\s+/)[0];
   if (!first) return null;
   return first.toLowerCase().replace(/[^a-z0-9._-]/g, "");
 }
 
+function mentionFromName(name) {
+  const key = firstNameKey(name);
+  if (!key) return null;
+  const slackId = FIRST_NAME_TO_SLACK_ID[key];
+  return slackId ? `<@${slackId}>` : `@${key}`;
+}
+
 function assigneeSuffix(card) {
-  const handles = (card.assignees || [])
-    .map((u) => handleFromName(u && u.name))
-    .filter(Boolean)
-    .map((h) => `@${h}`);
-  if (handles.length === 0) return " _(unassigned)_";
-  return ` _(${handles.join(", ")})_`;
+  const mentions = (card.assignees || [])
+    .map((u) => mentionFromName(u && u.name))
+    .filter(Boolean);
+  if (mentions.length === 0) return " _(unassigned)_";
+  return ` _(${mentions.join(", ")})_`;
 }
 
 function cardLine(card, { showAssignee = true } = {}) {
