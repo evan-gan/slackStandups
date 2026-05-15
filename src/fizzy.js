@@ -4,6 +4,10 @@ const FIZZY_REQUIRED_ENV_VARS = [
   "FIZZY_BOARD_ID",
 ];
 
+// Hardcoded for now — Hack Club's instance is the only one we hit, and its
+// API returns example.com hostnames that we have to rewrite to this.
+const FIZZY_BASE_URL = "https://fizzy.hackclub.com";
+
 const DONE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const GREETING =
@@ -56,10 +60,7 @@ async function getFizzyAccount(env = process.env) {
     accessToken: env.FIZZY_ACCESS_TOKEN,
     accountId: env.FIZZY_ACCOUNT_ID,
   };
-  if (env.FIZZY_BASE_URL) {
-    const host = env.FIZZY_BASE_URL.replace(/\/+$/, "");
-    opts.baseUrl = `${host}/${env.FIZZY_ACCOUNT_ID}`;
-  }
+  opts.baseUrl = `${FIZZY_BASE_URL}/${env.FIZZY_ACCOUNT_ID}`;
   if (env.FIZZY_DEBUG) {
     opts.hooks = {
       onRequestStart: (info) =>
@@ -74,6 +75,26 @@ async function getFizzyAccount(env = process.env) {
   }
   cachedAccount = createFizzyClient(opts);
   return cachedAccount;
+}
+
+// Hack Club's Fizzy instance returns card URLs pointed at example.com because
+// of a misconfiguration on their end. Rewrite the host to FIZZY_BASE_URL so
+// the Slack links actually open the right page.
+function normalizeFizzyUrl(url) {
+  if (!url) return url;
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return url;
+  }
+  if (parsed.hostname !== "example.com" && !parsed.hostname.endsWith(".example.com")) {
+    return url;
+  }
+  const target = new URL(FIZZY_BASE_URL);
+  parsed.protocol = target.protocol;
+  parsed.host = target.host;
+  return parsed.toString();
 }
 
 async function settled(promise, label) {
@@ -100,7 +121,7 @@ function decodeEntities(s) {
 // HTML via Turbo Frame at /{accountId}/boards/{boardId}/columns/closed.
 // Bearer auth works on this URL, so we scrape the article markup.
 async function fetchClosedCardsHtml(env = process.env) {
-  const host = (env.FIZZY_BASE_URL || "https://fizzy.do").replace(/\/+$/, "");
+  const host = FIZZY_BASE_URL;
   const url = `${host}/${env.FIZZY_ACCOUNT_ID}/boards/${env.FIZZY_BOARD_ID}/columns/closed`;
   const res = await fetch(url, {
     headers: {
@@ -172,8 +193,10 @@ async function fetchBoardOverview(account, boardId, { now = Date.now() } = {}) {
   ]);
 
   const safeColumns = columns || [];
-  const safeActive = activeCards || [];
-  const safeClosed = closedCards || [];
+  const fixCardUrl = (card) =>
+    card && card.url ? { ...card, url: normalizeFizzyUrl(card.url) } : card;
+  const safeActive = (activeCards || []).map(fixCardUrl);
+  const safeClosed = (closedCards || []).map(fixCardUrl);
 
   // Hack Club's Fizzy instance ignores the `closure` filter and returns the
   // same set of cards for active and closed queries. Combine + dedupe by id.
@@ -230,7 +253,7 @@ async function fetchBoardOverview(account, boardId, { now = Date.now() } = {}) {
   const resolvedBoard =
     board ||
     (safeActive.find((c) => c.board) || {}).board ||
-    { id: boardId, name: "Board", url: process.env.FIZZY_BASE_URL || "" };
+    { id: boardId, name: "Board", url: FIZZY_BASE_URL };
 
   return { board: resolvedBoard, columnGroups, doneYesterday, totalActive };
 }
@@ -286,15 +309,11 @@ function formatHeaderDate(date) {
   return `${weekday} ${rest}`;
 }
 
-function resolveBoardLink(board, env = process.env) {
-  if (env.FIZZY_BASE_URL) return env.FIZZY_BASE_URL.replace(/\/+$/, "");
-  return board.public_url || board.url;
+function resolveBoardLink() {
+  return FIZZY_BASE_URL;
 }
 
-function buildOverviewBlocks(
-  overview,
-  { date = new Date(), env = process.env } = {}
-) {
+function buildOverviewBlocks(overview, { date = new Date() } = {}) {
   const { board, columnGroups, doneYesterday, totalActive } = overview;
   const blocks = [];
 
@@ -350,10 +369,7 @@ function buildOverviewBlocks(
         type: "mrkdwn",
         text: `*Board:* ${escapeMrkdwn(board.name)}  •  ${formatHeaderDate(
           date
-        )}  •  ${totalActive} active card${totalActive === 1 ? "" : "s"}  •  <${resolveBoardLink(
-          board,
-          env
-        )}|Open board>`,
+        )}  •  ${totalActive} active card${totalActive === 1 ? "" : "s"}  •  <${resolveBoardLink()}|Open board>`,
       },
     ],
   });
